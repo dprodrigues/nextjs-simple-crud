@@ -1,7 +1,16 @@
 import type { NextPage } from 'next'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { Container, Box, Grid, TextField, Button } from '@mui/material'
+import {
+  Container,
+  Box,
+  Grid,
+  TextField,
+  Button,
+} from '@mui/material'
 import { useForm } from 'react-hook-form'
+import { post } from '../../lib/api'
+import { EMAIL_REGEX } from '../../lib/constants'
 
 type FormData = {
   username: string
@@ -13,65 +22,71 @@ const Register: NextPage = () => {
   const { register, handleSubmit } = useForm<FormData>()
   const router = useRouter()
 
-  const onSubmit = async (data: FormData) => {
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
+  const onSubmit = async (formData: FormData) => {
+    const submited = await post('/user', formData)
 
-    const response = await fetch('/api/register', options)
-
-    if (response.status === 201) {
+    if (submited) {
       router.push('/login')
     }
   }
 
   return (
-    <Container>
-      <Box
-        sx={{
-          alignItems: 'center',
-          display: 'flex',
-          height: '100vh',
-          textAlign: 'center',
-        }}
-      >
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField label="Username" {...register('username')} />
-          </Grid>
+    <>
+      <Head>
+        <title>Register</title>
+      </Head>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Email"
-              type="email"
-              {...register('email', { required: true })}
-            />
-          </Grid>
+      <Container>
+        <Box
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            height: '100vh',
+            textAlign: 'center',
+          }}
+        >
+          <Grid component="form" container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                label="Username"
+                {...register('username', { required: true })}
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Password"
-              type="password"
-              {...register('password', { required: true, min: 8, max: 32,  })}
-            />
-          </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Email"
+                type="email"
+                autoComplete="email"
+                {...register('email', {
+                  required: true,
+                  pattern: EMAIL_REGEX,
+                })}
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              type="submit"
-              onClick={handleSubmit(onSubmit)}
-            >
-              Create account
-            </Button>
+            <Grid item xs={12}>
+              <TextField
+                label="Password"
+                type="password"
+                autoComplete="current-password"
+                {...register('password', { required: true, min: 8, max: 32 })}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Button
+                variant="contained"
+                type="submit"
+                onClick={handleSubmit(onSubmit)}
+              >
+                Create account
+              </Button>
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
-    </Container>
+        </Box>
+      </Container>
+    </>
   )
 }
 

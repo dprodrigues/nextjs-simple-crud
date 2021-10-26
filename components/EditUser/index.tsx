@@ -10,6 +10,7 @@ import {
   DialogActions,
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
+import { put } from '../../lib/api'
 
 interface Props {
   user: User | null
@@ -23,45 +24,48 @@ type FormData = {
 }
 
 const EditUser: FC<Props> = ({ user, onClose, onSuccess }) => {
-  const { handleSubmit, register } = useForm<FormData>({
-    defaultValues: user ?? {},
+  const { handleSubmit, register, reset } = useForm<FormData>({
+    defaultValues: user as FormData,
   })
 
-  const onSubmit = async (data: FormData) => {
-    const url = `/api/user/${user?.id}`
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
 
-    const options = {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }
+  const onSubmit = async (data: FormData) => {
+    const submited = await put(`user/${user?.id}`, data)
 
     if (!Object.keys(data).length) {
       alert('No data to update')
+
       return
     }
 
-    const response = await fetch(url, options)
-
-    if (response.ok) {
+    if (submited) {
       onSuccess()
     } else {
       alert('Error updating user')
     }
 
-    onClose()
+    handleClose()
   }
 
   return (
-    <Dialog open={Boolean(user)} onClose={onClose}>
+    <Dialog open={Boolean(user)} onClose={handleClose}>
       <DialogTitle>Edit User</DialogTitle>
 
       <DialogContent>
-        <Box display="flex" flexDirection="column">
+        <Box
+          component="form"
+          display="flex"
+          flexDirection="column"
+          sx={{ paddingTop: '12px' }}
+        >
           <TextField
             label="Username"
             sx={{ marginBottom: '12px' }}
-            {...register('username', { required: true})}
+            {...register('username', { required: true })}
           />
 
           <TextField
@@ -72,7 +76,7 @@ const EditUser: FC<Props> = ({ user, onClose, onSuccess }) => {
         </Box>
 
         <DialogActions>
-          <Button variant="contained" type="submit" onClick={onClose}>
+          <Button variant="contained" type="submit" onClick={handleClose}>
             Cancel
           </Button>
 

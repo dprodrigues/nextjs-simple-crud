@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { NextPage, GetServerSideProps } from 'next'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import {
   Container,
@@ -14,6 +15,7 @@ import {
 } from '@mui/material'
 import EditUser from '../../components/EditUser'
 import prisma from '../../lib/prisma'
+import { deleteReq } from '../../lib/api'
 
 export type User = {
   id: number
@@ -26,7 +28,7 @@ interface Props {
   users: User[]
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -52,22 +54,13 @@ const Admin: NextPage<Props> = ({ users }) => {
   const router = useRouter()
 
   const refreshData = () => {
-    return router.replace(router.asPath);
+    return router.replace(router.asPath)
   }
 
   const deleteUser = async (id: number) => {
-    const url = `/api/user/${id}`
+    const data = await deleteReq(`/user/${id}`)
 
-    const options = {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-
-    const response = await fetch(url, options)
-
-    if (response.status !== 200) {
+    if (!data) {
       alert('Error deleting user')
     }
 
@@ -76,6 +69,10 @@ const Admin: NextPage<Props> = ({ users }) => {
 
   return (
     <>
+      <Head>
+        <title>Admin</title>
+      </Head>
+
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
@@ -91,10 +88,10 @@ const Admin: NextPage<Props> = ({ users }) => {
 
           <TableBody>
             {users?.map((user) => (
-              <TableRow
-                key={`${user.id}${user.username}`}
-              >
-                <TableCell component="th" scope="row">{user.id}</TableCell>
+              <TableRow key={`${user.id}${user.username}`}>
+                <TableCell component="th" scope="row">
+                  {user.id}
+                </TableCell>
                 <TableCell align="center">{user.username}</TableCell>
                 <TableCell align="center">{user.email}</TableCell>
                 <TableCell align="center">{user.role}</TableCell>
@@ -126,12 +123,14 @@ const Admin: NextPage<Props> = ({ users }) => {
           </TableBody>
         </Table>
       </TableContainer>
-    
-      <EditUser 
-        user={userToEdit} 
-        onClose={() => setUserToEdit(null)} 
-        onSuccess={refreshData} 
-      />
+
+      {userToEdit && (
+        <EditUser
+          user={userToEdit}
+          onClose={() => setUserToEdit(null)}
+          onSuccess={refreshData}
+        />
+      )}
     </>
   )
 }

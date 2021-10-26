@@ -19,7 +19,7 @@ const handle: NextApiHandler = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-    }
+    },
   })
 
   if (!user) {
