@@ -4,11 +4,11 @@ import prisma from '../../../lib/prisma'
 const handle: NextApiHandler = async (req, res) => {
   if (req.method === 'DELETE') {
     const id = Number(req.query.id)
-    
+
     const response = await prisma.user.delete({
       where: {
         id,
-      }
+      },
     })
 
     if (response) {
@@ -41,15 +41,15 @@ const handle: NextApiHandler = async (req, res) => {
       data: {
         username,
         email,
-      }
+      },
     })
 
     if (!response) {
       res.status(404).json({
         message: 'User not found',
       })
-    } 
-    
+    }
+
     res.status(200).json({
       message: 'User updated',
     })
